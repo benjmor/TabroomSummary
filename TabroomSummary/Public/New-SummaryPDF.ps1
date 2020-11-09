@@ -18,7 +18,9 @@ function New-SummaryPDF{
   $tournamentJson = ConvertJSON-ToObject -jsonText $response
   #>
 
-  $tournamentResultSummary = Write-TournamentSummary -tournamentID $tournamentID -mySchool $mySchool -tournamentJson $tournamentJson | Out-String
+  $tournamentDate = Get-Date #Default value
+  $tournamentResultSummary = Write-TournamentSummary -tournamentID $tournamentID -mySchool $mySchool -tournamentJson $tournamentJson -date ([ref]$tournamentDate)
+  $tournamentResultSummary = $tournamentResultSummary | Out-String
 
   if ($installIText){
       install-Itext7
@@ -48,12 +50,14 @@ function New-SummaryPDF{
   $myTitleParagraph.SetFont($myFont) | Out-Null
 
   #Create paragraph block for the date
-  $myDateParagraph = [iText.Layout.Element.Paragraph]($tournamentJson.start | Get-Date -Format "MMMM dd, yyyy")
+  $myDateParagraph = [iText.Layout.Element.Paragraph]( Get-Date ($tournamentDate | Get-Date) -Format "MMMM dd, yyyy")
 
   #Create image from the provided image.
-  $myImage = [iText.IO.Image.ImageDataFactory]::Create($tournamentPhoto)
-  $layoutImage = [iText.Layout.Element.Image]::new($myImage)
-  $layoutImage.SetAutoScaleWidth(500) | Out-Null #Necessary to keep from pagebreaking.
+  if ($tournamentPhoto){
+      $myImage = [iText.IO.Image.ImageDataFactory]::Create($tournamentPhoto)
+      $layoutImage = [iText.Layout.Element.Image]::new($myImage)
+      $layoutImage.SetAutoScaleWidth(500) | Out-Null #Necessary to keep from pagebreaking.
+  }
 
   #Create text for the tournament results.
   $TNR = [itext.io.font.constants.StandardFonts]::TIMES_ROMAN
@@ -69,7 +73,9 @@ function New-SummaryPDF{
   #Add paragraphs to the document.
   $doc.Add($myTitleParagraph) | Out-Null
   $doc.Add($myDateParagraph) | Out-Null
-  $doc.Add($layoutImage) | Out-Null
+  if ($tournamentPhoto){
+    $doc.Add($layoutImage) | Out-Null
+  }
   $doc.Add($myPara) | Out-Null
   $doc.Close() | Out-Null
 }

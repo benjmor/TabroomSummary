@@ -13,8 +13,8 @@ function Get-TeamCodeFromEntryDictionary{
         [PSCustomObject]$entryDictionary
     )
     if ($team.entry){
-        return (Get-ByID -inputColumn "entry_id" -inputObject $entryDictionary -id $team.entry -outputColumn code)
+        return (Get-PropertyByID -inputColumn "entry_id" -inputObject $entryDictionary -id $team.entry -outputColumn code)
     } else {
-        return (Get-ByID -inputColumn "entry_id" -inputObject $entryDictionary -id $team -outputColumn code)
+        return (Get-PropertyByID -inputColumn "entry_id" -inputObject $entryDictionary -id $team -outputColumn code)
     }
 }

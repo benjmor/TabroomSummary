@@ -12,21 +12,35 @@ function Write-TournamentSummary{
     param(
         [string]$tournamentID, 
         [string]$mySchool,
-        $tournamentJson
+        $tournamentJson,
+        [ref]$date,
+        [switch]$onlineTournament
     )
+    $defaultLocation = "WISCONSIN" #WDCA hegemony.
 
     if (!($tournamentJson)){
         $baseURL = "http://www.tabroom.com/api/download_data.mhtml?tourn_id="
         $response = (Invoke-WebRequest $baseURL$tournamentID).Content
-        $jsonObject = ConvertJSON-ToObject -jsonText $response
+        $jsonObject = Convert-TabroomJsonToObject -jsonText $response
     } else {
         $jsonObject = $tournamentJson
     }
+    
+    $date = $jsonObject.start
 
     #Create an object that contains the entry ID, name, and code so that lookups can be done.
     $globalEntryDictionary = Create-EntryDictionary($jsonObject)
 
-    $jsonObject.city.ToUpper() + " -- " + (Get-TournamentDateString -jsonObject $jsonObject) + " " + "After several rounds of competitions, a few teams walked away ranked number one in their divisions."
+    #Especially with online tournaments, we need backup options for location.
+    if ($jsonObject.city){
+        $location = $jsonObject.city.ToUpper()
+    } elseif ($onlineTournament) {
+        $location = "THE INTERNET"
+    } else {
+        $location = $defaultLocation
+    }
+
+    $location + " -- " + (Get-TournamentDateString -jsonObject $jsonObject) + " " + "After several rounds of competitions, a few teams walked away ranked number one in their divisions."
 
     $resultsArray = Get-TopPerformerStringsForAllEvents -jsonObject $jsonObject -entryDictionary $globalEntryDictionary
     $resultsArray -join " "

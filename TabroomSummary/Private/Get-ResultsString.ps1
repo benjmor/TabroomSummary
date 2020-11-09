@@ -41,7 +41,7 @@ function Get-ResultsString{
         $resultReportTeamCode = Get-TeamCodeFromEntryDictionary -team $resultReportTeam -entryDictionary $entryDictionary
     }
     try {
-        $resultString = Generate-ResultsString -resultType $resultType -divName $divName -resultReportTeamName $resultReportTeamName -resultReportTeamCode $resultReportTeamCode
+        $resultString = Get-ResultSentence -resultType $resultType -divName $divName -resultReportTeamName $resultReportTeamName -resultReportTeamCode $resultReportTeamCode
         return $resultString
     } catch {
         write-error "Could not generate results string for team name $resultReportTeamName and team code $resultReportTeamCode."

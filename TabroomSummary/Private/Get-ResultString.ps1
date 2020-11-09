@@ -10,7 +10,7 @@
     .Parameter resultReportTeamCode
     Team code -- "Test Academy ZZ", "DU Duolastname & Partner"
 #>
-function Get-ResultString{
+function Get-ResultSentence{
     param(
         [string]$resultType,
         [string]$divName,
