@@ -23,9 +23,16 @@ function New-SummaryPDF{
   $tournamentResultSummary = $tournamentResultSummary | Out-String
 
   if ($installIText){
-      install-Itext7
+      . "$PSScriptRoot\install-Itext7.ps1"
+      Install-Itext7
   }
   #TODO: Add a check to see if iText is installed.
+
+  #Import the Private functions.
+  #TODO: Either digitally sign this stuff or update ExecutionPolicy
+  foreach ($helper in "$((Get-Item $PSScriptRoot).PSParentPath)\Private"){
+	. $helper.FullName
+  }
 
   $pdfDocuFilename = "$PSScriptRoot\$mySchool-tournament-report.pdf"
 
