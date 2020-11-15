@@ -11,14 +11,17 @@
     Team code -- "Test Academy ZZ", "DU Duolastname & Partner"
 #>
 function Get-ResultSentence{
+    [CmdletBinding()]
     param(
         [string]$resultType,
         [string]$divName,
         [string]$resultReportTeamName,
         [string]$resultReportTeamCode
     )
-    if (($resultReportTeamName -like '* and *') -or ($resultReportTeamName -like '*&*')){
-        $isTeam = 1
+    if (($resultReportTeamName -match ' and ') -or ($resultReportTeamName -match '&')){
+        $isTeam = $true
+    } else {
+        $isTeam = $false
     }
     $honorType = if ($resultType -eq "*Prelim*") {"top seed"} elseif ($resultType -eq "*Final Place*") {"champion"}
 

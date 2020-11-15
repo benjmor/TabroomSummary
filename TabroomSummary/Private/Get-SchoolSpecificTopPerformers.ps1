@@ -4,6 +4,7 @@
   #TODO: Actually make this return the top performers, or at least order it by percentile/rank.
 #>
 function Get-SchoolSpecificTopPerformers{
+    [CmdletBinding()]
     param(
         $specificSchoolName,
         $entryDictionary,
@@ -12,7 +13,12 @@ function Get-SchoolSpecificTopPerformers{
     $schoolSpecificEntries = Get-DebateEntriesBySchoolName -schoolName $specificSchoolName -entryDictionary $globalEntryDictionary
     $topPerformerObjectArray = @()
     foreach ($division in $jsonObject.categories.events){
+        Write-Verbose "Finding school entries in $($division.type) division $($division.name)..."
         $FinalPlaces = $division.result_sets | where {$_.label -like "*Final Places*"}
+        if (-Not ($FinalPlaces)){
+            Write-Verbose "No entries found in $($division.type) division $($division.name) for $specificSchoolName. Continuing."
+            Continue
+        }
             foreach ($performance in $FinalPlaces.results){
                 if ($schoolSpecificEntries.entry_id -contains $performance.entry){
                     $perfTeamCode = Get-TeamCodeFromEntryDictionary -entryDictionary $globalEntryDictionary -team $performance

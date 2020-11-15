@@ -24,7 +24,7 @@ function New-TournamentSummary{
 
   $baseURL = "http://www.tabroom.com/api/download_data.mhtml?tourn_id="
   $response = (Invoke-WebRequest $baseURL$tournamentID).Content
-  $tournamentJson = ConvertJSON-ToObject -jsonText $response
+  $tournamentJson = Convert-TabroomJsonToObject -jsonText $response
 
   $tournamentDate = Get-Date #Default value is Today.
   $tournamentResultSummary = Write-TournamentSummary -tournamentID $tournamentID -mySchool $mySchool -tournamentJson $tournamentJson -date ([ref]$tournamentDate) | Out-String

@@ -3,6 +3,7 @@
     Returns a random phrase from a list of phrases synonymous with winning. First letter is capitalized unless specified otherwise.
 #>
 function Get-WinningSynonym{
+  [CmdletBinding()]
   param(
     [switch]$lowercase
   )

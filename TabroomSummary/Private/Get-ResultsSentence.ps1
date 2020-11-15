@@ -12,7 +12,8 @@
   .Parameter rank
   The rank that you want data on -- eg. specify 1 for first place.
 #>
-function Get-ResultsString{
+function Get-ResultsSentence{
+    [CmdletBinding()]
     param(
         [PsCustomObject]$divisionCategory,
         [Parameter(Mandatory=$true, ParameterSetName = "JOTData")]
@@ -26,12 +27,16 @@ function Get-ResultsString{
     $divName = $divisionCategory.name
     $divisionResults = $division.result_sets
     $resultReport = $divisionResults | where label -Like "$resultType" #TODO: Error handling if there's more than one match
+    if (-Not $resultReport){
+        Write-Warning "No results found for $resultType in the $($divisionCategory.type) division $($divisionCategory.name). Skipping."
+        return $null
+    }
     $teamWithSpecifiedRank = ($resultReport.results | where rank -eq $rank)
     try {
       $resultReportTeam = $teamWithSpecifiedRank[0]
     } catch {
-      write-error "Could not find a matching result for $resultType and Rank $rank."
-      return
+      write-warning "Could not find a matching result for $resultType and Rank $rank."
+      return $null
     }
     if ($jotObject){
         $resultReportTeamName = Get-TeamName -team $resultReportTeam -jotObject $jotObject
@@ -44,6 +49,7 @@ function Get-ResultsString{
         $resultString = Get-ResultSentence -resultType $resultType -divName $divName -resultReportTeamName $resultReportTeamName -resultReportTeamCode $resultReportTeamCode
         return $resultString
     } catch {
-        write-error "Could not generate results string for team name $resultReportTeamName and team code $resultReportTeamCode."
+        write-warning "Could not generate results string for team name $resultReportTeamName and team code $resultReportTeamCode."
+        return $null
     }
 }

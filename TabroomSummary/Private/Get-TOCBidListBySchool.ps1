@@ -3,7 +3,8 @@
     Given a school name, returns an array of team names/codes from that school that received a TOC bid.
 #>
 function Get-TOCBidListBySchool{
-    param(
+    [CmdletBinding()]
+        param(
         $specificSchoolName,
         $entryDictionary,
         $jsonObject
@@ -12,6 +13,9 @@ function Get-TOCBidListBySchool{
     $bidObjectArray = @()
     foreach ($division in $jsonObject.categories.events){
         $TOCBids = $division.result_sets | where {$_.label -like "TOC Qualifying Bids"}
+        if (-Not ($TOCBids)){
+            return $null
+        }
         foreach ($bidResult in $TOCBids.results){
             if ($schoolSpecificEntries.entry_id -contains $bidResult.entry){
                 $biddingTeamCode = Get-TeamCodeFromEntryDictionary -entryDictionary $globalEntryDictionary -team $bidResult

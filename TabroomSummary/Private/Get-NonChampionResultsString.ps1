@@ -3,6 +3,7 @@
   Returns a sentence summarizing the result for a given team.
 #>
 function Get-NonChampionResultsString{
+    [CmdletBinding()]
     param(
         [string]$honorType,
         [string]$divName,

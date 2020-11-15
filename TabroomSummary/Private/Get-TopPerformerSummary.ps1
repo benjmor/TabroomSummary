@@ -1,9 +1,10 @@
 <#
   .Synopsis
-  Returns sentences describing the best entries from a school. The top performer array is expected to be organized in descending order by percentile/rank.
-  #TODO: verify the array is sorted in a way that guarantees top performers are in descending order by percentile/rank.
+    Returns sentences describing the best entries from a school. The top performer array is expected to be organized in descending order by percentile/rank.
+    #TODO: Return the number of entries in each division.    
 #>
 function Get-TopPerformerSummary{
+    [CmdletBinding()]
     param(
         $topPerformerArray,
         $schoolName,
