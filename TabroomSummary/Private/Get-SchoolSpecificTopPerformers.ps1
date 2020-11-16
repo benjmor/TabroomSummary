@@ -1,7 +1,7 @@
 <#
   .Synopsis
   Currently returns all performers from a school, including their name, code, division, and rank (including percentile finish).
-  #TODO: Actually make this return the top performers, or at least order it by percentile/rank.
+      #TODO: Add Speaker awards -- currently blocked by not knowing the individual student ID
 #>
 function Get-SchoolSpecificTopPerformers{
     [CmdletBinding()]
@@ -14,12 +14,13 @@ function Get-SchoolSpecificTopPerformers{
     $topPerformerObjectArray = @()
     foreach ($division in $jsonObject.categories.events){
         Write-Verbose "Finding school entries in $($division.type) division $($division.name)..."
-        $FinalPlaces = $division.result_sets | where {$_.label -like "*Final Places*"}
-        if (-Not ($FinalPlaces)){
-            Write-Verbose "No entries found in $($division.type) division $($division.name) for $specificSchoolName. Continuing."
-            Continue
-        }
-            foreach ($performance in $FinalPlaces.results){
+        foreach ($typeOfResult in "Final Places"){ #Add Speaker Awards if we can ever get the individual student ID into the entry dictionary.
+            $awardResults = $division.result_sets | where {$_.label -match $typeOfResult}
+            if (-Not ($awardResults)){
+                Write-Warning "No $typeOfResult entries found in $($division.type) division $($division.name) for $specificSchoolName. Continuing."
+                Continue
+            }
+            foreach ($performance in $awardResults.results){
                 if ($schoolSpecificEntries.entry_id -contains $performance.entry){
                     $perfTeamCode = Get-TeamCodeFromEntryDictionary -entryDictionary $globalEntryDictionary -team $performance
                     $perfTeamName = Get-TeamNameFromEntryDictionary -entryDictionary $globalEntryDictionary -team $performance
@@ -33,6 +34,7 @@ function Get-SchoolSpecificTopPerformers{
                     $topPerformerObjectArray += $performanceObject
                 }
             }
+        }
     }
     return $topPerformerObjectArray
 }

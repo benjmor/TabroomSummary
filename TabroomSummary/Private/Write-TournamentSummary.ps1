@@ -8,6 +8,14 @@
   .Parameter tournamentJson
   JSON object if you want to provide your own JSON object for testing without downloading from tabroom.com.
 
+  <# TODO: Parse elim round results since not all tournaments publish Final Places.
+    $pfBracket = ($pfResults | where label -eq 'Bracket').results
+    $roundValues = @()
+    $roundValues = foreach ($elim in $pfBracket){
+        $roundValues += ($elim.round)
+    }
+  #>
+
   #TODO - Add more flair.
   "went spotless with an undefeated record"
   "This was a massive tournament with over ### schools across the nation in attendance."
@@ -20,10 +28,10 @@ function Write-TournamentSummary{
         [string]$mySchool,
         $tournamentJson,
         [ref]$date,
-        [switch]$onlineTournament,
-        $maxStudentsToCallOut = 3
+        $maxStudentsToCallOut = 3,
+        $locationOverride = "THE INTERNET" #Covid, bro
     )
-    $defaultLocation = "WISCONSIN" #WDCA hegemony.
+
 
     if (!($tournamentJson)){
         $baseURL = "http://www.tabroom.com/api/download_data.mhtml?tourn_id="
@@ -41,10 +49,8 @@ function Write-TournamentSummary{
     #Especially with online tournaments, we need backup options for location.
     if ($jsonObject.city){
         $location = $jsonObject.city.ToUpper()
-    } elseif ($onlineTournament) {
-        $location = "THE INTERNET"
     } else {
-        $location = $defaultLocation
+        $location = $locationOverride
     }
 
     $location + " -- " + (Get-TournamentDateString -jsonObject $jsonObject) + " " + $(Get-ClicheIntroSentence)
@@ -52,26 +58,20 @@ function Write-TournamentSummary{
     $resultsArray = Get-TopPerformerStringsForAllEvents -jsonObject $jsonObject -entryDictionary $globalEntryDictionary
     $resultsArray -join " " -replace "  "," " #Replace double-spaces because they're abhorrent.
 
-    #region school specifics
-    Get-SchoolSpecificSummarySentence -schoolName $mySchool
-    $schoolSpecificTopPerformerArray = Get-SchoolSpecificTopPerformers -specificSchoolName $mySchool -entryDictionary $globalEntryDictionary -jsonObject $jsonObject
-    #TODO: How many students/entries did the school send to the tournament?
-    "$mySchool sent $($schoolSpecificTopPerformerArray.count) entries to the tournament and every student competed admirably."
-    ##This will likely require the full API
-    #Get the TOC bids.
-    $schoolSpecificBidArray = Get-TOCBidListBySchool -specificSchoolName $mySchool -entryDictionary $globalEntryDictionary -jsonObject $jsonObject
-    Get-TOCBidSummary -bidArray $schoolSpecificBidArray
-    #Call out top performers
-    Get-TopPerformerSummary -topPerformerArray ($schoolSpecificTopPerformerArray | Sort-Object -Descending -Property { [int]$_.percentile }) -schoolName $mySchool -maxTopPerformers $maxStudentsToCallOut
-    #TODO: Add Speaker awards
-    #endregion
-    <# TODO: Parse elim round results since not all tournaments publish Final Places.
-    $pfBracket = ($pfResults | where label -eq 'Bracket').results
-    $roundValues = @()
-    $roundValues = foreach ($elim in $pfBracket){
-        $roundValues += ($elim.round)
+    #school specific details
+    if ($mySchool){
+        Get-SchoolSpecificSummarySentence -schoolName $mySchool
+        $schoolSpecificTopPerformerArray = Get-SchoolSpecificTopPerformers -specificSchoolName $mySchool -entryDictionary $globalEntryDictionary -jsonObject $jsonObject
+        #TODO: How many students/entries did the school send to the tournament?
+        "$mySchool sent $($schoolSpecificTopPerformerArray.count) entries to the tournament and every student competed admirably."
+        ##This will likely require the full API
+        #Get the TOC bids.
+        $schoolSpecificBidArray = Get-TOCBidListBySchool -specificSchoolName $mySchool -entryDictionary $globalEntryDictionary -jsonObject $jsonObject
+        Get-TOCBidSummary -bidArray $schoolSpecificBidArray
+        #Call out top performers
+        Get-TopPerformerSummary -topPerformerArray ($schoolSpecificTopPerformerArray | Sort-Object -Descending -Property { [int]$_.percentile }) -schoolName $mySchool -maxTopPerformers $maxStudentsToCallOut
     }
-    #>
+
     #Say something nice and vacuous.
     Get-ClicheSummary
     #Link out to the full Tabroom results.

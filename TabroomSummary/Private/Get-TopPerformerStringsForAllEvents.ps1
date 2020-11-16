@@ -1,6 +1,7 @@
 <#
   .Synopsis
   Returns the champion (Final Place rank 1) and top seeds of all events at the tournament.
+  #TODO: Return both entries in the case of co-champions.
 #>
 function Get-TopPerformerStringsForAllEvents{
     [CmdletBinding()]
