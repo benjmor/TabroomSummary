@@ -18,15 +18,16 @@ function install-Itext7{
     
     #addTypes
     $basePath = "$home\.nuget\packages"
-    $AddTypeArray = @(`
-        "$basePath\common.logging.core\*\lib\net40\Common.Logging.Core.dll",`
-        "$basePath\common.logging\*\lib\net40\Common.Logging.dll",`
-        "$basePath\itext7\*\lib\net40\itext.io.dll",`
-        "$basePath\portable.bouncycastle\*\lib\net40\BouncyCastle.Crypto.dll",
-        "$basePath\itext7\*\lib\net40\itext.kernel.dll",
-        "$basePath\itext7\*\lib\net40\itext.layout.dll"
-    )
-    foreach ($myDll in $AddTypeArray){
-        Add-Type -Path $myDll
-    }
+    #Get all versions of iText available
+    $commonLoggingCoreVersions = (Get-ChildItem "$basePath\common.logging.core\").FullName
+    $commonLoggingVersions = (Get-ChildItem "$basePath\common.logging\").FullName
+    $itextVersions = (Get-ChildItem "$basePath\itext7\").FullName
+    $bouncyCastleVersions = (Get-ChildItem "$basePath\portable.bouncycastle\").FullName
+
+    Add-Type -Path "$commonLoggingCoreVersions\lib\net40\Common.Logging.Core.dll"
+    Add-Type -Path "$commonLoggingVersions\lib\net40\Common.Logging.dll"
+    Add-Type -Path "$itextVersions\lib\net45\itext.io.dll"
+    Add-Type -Path "$itextVersions\lib\net45\itext.kernel.dll"
+    Add-Type -Path "$itextVersions\lib\net45\itext.layout.dll"
+    Add-Type -Path "$bouncyCastleVersions\lib\net40\BouncyCastle.Crypto.dll"
 }

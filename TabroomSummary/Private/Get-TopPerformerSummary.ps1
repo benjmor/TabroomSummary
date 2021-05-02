@@ -10,12 +10,13 @@ function Get-TopPerformerSummary{
         $schoolName,
         $maxTopPerformers = 3 #Only include details for the best 3 entries from a school.
     )
-    if ($topPerformerArray){
+    if ($topPerformerArray.length -gt 1){
         "These were the top performing entries from $schoolName`:"
     } else {
         return
     }
-    foreach ($topPerformer in $topPerformerArray[0..($maxTopPerformers-1)]){
+    $resultsToReturn = (@($maxTopPerformers, $topPerformerArray.length) | Measure-Object).Minimum #If you only have two entries, don't return three entries...
+    foreach ($topPerformer in $topPerformerArray[0..($resultsToReturn-1)]){
         "$($topPerformer.TeamCode) `($($topPerformer.TeamName)`) placed in the top $($topPerformer.rank) in $($topPerformer.Division)."
     }
 }

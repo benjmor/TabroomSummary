@@ -15,18 +15,27 @@ function New-TournamentSummary{
     [switch]$createPdf
   )
   if ($createPdf){
-      if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
-          Write-Error "Installing PDF creation functionality requires running as administrator. Exiting..." -ErrorAction Stop
+      $itextInstalled = (Test-Path "$home\.nuget\packages\itext7")
+      if (-Not $itextInstalled){
+          if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
+              Write-Error "Installing PDF creation functionality requires running as administrator. Exiting..." -ErrorAction Stop
+          }
+          $ModuleRoot = (Get-Module "TabroomSummary").ModuleBase
+          . "$ModuleRoot\etc\install-Itext7.ps1"
+          Install-Itext7
       }
-      . "$PSScriptRoot\etc\install-Itext7.ps1"
-      Install-Itext7
   }
 
   $baseURL = "http://www.tabroom.com/api/download_data.mhtml?tourn_id="
   $response = (Invoke-WebRequest $baseURL$tournamentID).Content
   $tournamentJson = Convert-TabroomJsonToObject -jsonText $response
 
-  $tournamentDate = Get-Date #Default value is Today.
+  try {
+    $tournamentDate = Get-Date $tournamentJson.end
+  } catch {
+    Write-Warning "Could not determine tournament end date -- defaulting to Today."
+    $tournamentDate = Get-Date #Default value is Today.
+  }
   $tournamentResultSummary = Write-TournamentSummary -tournamentID $tournamentID -mySchool $mySchool -tournamentJson $tournamentJson -date ([ref]$tournamentDate) | Out-String
 
   if (-Not ($createPdf)){
@@ -85,5 +94,6 @@ function New-TournamentSummary{
       }
       $doc.Add($myPara) | Out-Null
       $doc.Close() | Out-Null
+      Write-Host "Created PDF Summary at $pdfDocuFilename."
     }
 }
