@@ -1,6 +1,9 @@
 <#
     .Synopsis
         Takes a tabroom-formatted Json and returns a PowerShell object representing the tournament data.
+    .Notes
+        This is probably a good place to talk about the structure of a Tabroom JSON.
+        
     .Example
         Convert-TabroomJsonToObject -tabroomJson "c:\temp\myJson.json"
 #>

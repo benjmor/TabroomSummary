@@ -11,11 +11,15 @@ function Get-SchoolSpecificTopPerformers{
         $jsonObject
     )
     $schoolSpecificEntries = Get-DebateEntriesBySchoolName -schoolName $specificSchoolName -entryDictionary $globalEntryDictionary
+    if (-Not $schoolSpecificEntries){
+        Write-Warning "Did not find any entries from school $specificSchoolName. It's possible that the tournament uses codes that obfuscate school name."
+        return
+    }
     $topPerformerObjectArray = @()
     foreach ($division in $jsonObject.categories.events){
         Write-Verbose "Finding school entries in $($division.type) division $($division.name)..."
         foreach ($typeOfResult in "Final Places"){ #Add Speaker Awards if we can ever get the individual student ID into the entry dictionary.
-            $awardResults = $division.result_sets | where {$_.label -match $typeOfResult}
+            $awardResults = $division.result_sets | Where-Object {$_.label -match $typeOfResult}
             if (-Not ($awardResults)){
                 Write-Warning "No $typeOfResult entries found in $($division.type) division $($division.name) for $specificSchoolName. Continuing."
                 Continue

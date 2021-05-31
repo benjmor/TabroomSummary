@@ -3,13 +3,18 @@
   Creates a PDF with a newspaper article summarizing a debate tournament.
   #TODO: Get some sort of API call to https://www.mascotdb.com/ that will return the school mascot.
   #TODO: Add a check to see if iText is installed.
-  .Parameter tournamentPhoto
-  Link to a local image file (eg. png, jpeg).
 #>
 function New-TournamentSummary{
   param(
-    [string]$mySchool, 
+    #String name of your school so we can get some cool, school-specific sentences
+    [Parameter(Mandatory=$True)]
+    [string]$mySchool,
+    #ID of the tournament pulled from Tabroom.com
+    [Parameter(Mandatory=$True)]
     [string]$tournamentID,
+    #Link to a photo png/jpeg to use in the article.
+    [Parameter(ParameterSetName="PDF")]
+    [ValidatePattern("\.png|\.jpg|.jpeg")]
     $tournamentPhoto,
     #Switch to create a PDF document containing the summary. Otherwise, a string will be returned.
     [switch]$createPdf
@@ -51,7 +56,7 @@ function New-TournamentSummary{
       $doc = [iText.Layout.Document]::new($pdf)
 
       #Set up basic font
-      $standardFonts = [itext.io.font.constants.StandardFonts]
+      # $standardFonts = [itext.io.font.constants.StandardFonts] #Removed font changing features for now.
       $TNRBold = [itext.io.font.constants.StandardFonts]::TIMES_BOLD
       $myFont = [iText.Kernel.Font.PdfFontFactory]::CreateFont($TNRBold)
 

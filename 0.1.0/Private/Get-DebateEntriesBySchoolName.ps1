@@ -9,5 +9,5 @@ function Get-DebateEntriesBySchoolName{
         [string]$schoolName,
         $entryDictionary
     )
-    return $entryDictionary | where {$_.code -like "$schoolName*"} | Select-Object entry_id
+    return $entryDictionary | Where-Object {$_.code -like "$schoolName*"} | Select-Object entry_id
 }

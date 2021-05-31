@@ -32,7 +32,8 @@ function Write-TournamentSummary{
         $locationOverride = "THE INTERNET" #Covid, bro
     )
 
-
+    #If an object has already been downloaded and passed in, use that, otherwise download data from Tabroom.
+    #This is only returning the data available to the public (no user authentication).
     if (!($tournamentJson)){
         $baseURL = "http://www.tabroom.com/api/download_data.mhtml?tourn_id="
         $response = (Invoke-WebRequest $baseURL$tournamentID).Content
@@ -41,25 +42,32 @@ function Write-TournamentSummary{
         $jsonObject = $tournamentJson
     }
     
+    #Use tournament start date as the date for the summary
     $date = $jsonObject.start
 
     #Create an object that contains the entry ID, name, and code so that lookups can be done.
+    #This will be necessary until there's a more robust API published.
     $globalEntryDictionary = New-EntryDictionary($jsonObject)
+    $resultsStringArray = Get-TopPerformerStringsForAllEvents -jsonObject $jsonObject -entryDictionary $globalEntryDictionary
 
     #Especially with online tournaments, we need backup options for location.
     if ($jsonObject.city){
         $location = $jsonObject.city.ToUpper()
     } else {
-        $location = $locationOverride
+        $location = $locationOverride.ToUpper()
     }
 
+    #Start off the article with an all-caps location name, newspaper style.
+    #On the same line, add a simple topic sentence explaining what tournament happened and when.
+    #Then provide some generic commentary about it.
     $location + " -- " + (Get-TournamentDateString -jsonObject $jsonObject) + " " + $(Get-ClicheIntroSentence)
 
-    $resultsArray = Get-TopPerformerStringsForAllEvents -jsonObject $jsonObject -entryDictionary $globalEntryDictionary
-    $resultsArray -join " " -replace "  "," " #Replace double-spaces because they're abhorrent.
+    #Write out the results for top finishers in each event.
+    $resultsStringArray -join " " -replace "  "," " #Replace double-spaces because they're not good style.
 
     #school specific details
     if ($mySchool){
+        #Generically state that the school of interest attended.
         Get-SchoolSpecificSummarySentence -schoolName $mySchool
         $schoolSpecificTopPerformerArray = Get-SchoolSpecificTopPerformers -specificSchoolName $mySchool -entryDictionary $globalEntryDictionary -jsonObject $jsonObject
         #TODO: How many students/entries did the school send to the tournament?
