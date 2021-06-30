@@ -8,6 +8,7 @@
         Convert-TabroomJsonToObject -tabroomJson "c:\temp\myJson.json"
 #>
 function Convert-TabroomJsonToObject{
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true,
         ParameterSetName="ImportByFilePath")]
