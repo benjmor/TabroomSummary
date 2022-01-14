@@ -4,7 +4,7 @@
         [Parameter(Mandatory=$True)]
         [int]$tournamentID
     )
-    $myJsonObj = Convert-OfficialJsonToUsefulJson -tournamentID $tournamentID | ConvertFrom-Json
+    $myJsonObj = Convert-OfficialJsonToUsefulJson -tournamentID $tournamentID -patternMatch "PF" | ConvertFrom-Json
     enum Side {
         pro = 1
         con = 2
@@ -18,11 +18,11 @@
     $wins[2][[side]2] = 0
 
     foreach ($round in (($myJsonObj | Where-Object { $_.name -match "PF|Public Forum" } ).rounds)){
-        if ($round.label -eq "Zero"){
+        if ($round.PsObject.Properties.name -contains 'label' -and $round.label -eq "Zero"){
             continue;
         }
         foreach ($ballot in $round.sections.ballots){
-            if ($ballot.bye -or $ballot.forfeit -or ($ballot.winloss -eq "B")){
+            if ($ballot.PsObject.Properties.name -contains 'bye' -or $ballot.PsObject.Properties.name -contains 'forfeit' -or ($ballot.winloss -eq "B")){
                 continue
             }
             try {
@@ -31,17 +31,21 @@
             } catch {
                 continue
             }
-            $side = $ballot.side
+            if ($ballot.PsObject.Properties.name -contains 'side'){
+                $side = $ballot.side
+            } else {
+                $side = ""
+            }
             #The converted tabroom JSON uses Aff/Neg
             if ($side -match "1|aff"){
                 $side = 1
             } elseif ($side -match "2|neg") {
                 $side = 2
             } else {
-                Write-Verbose "Side was set as $side, which isn't understood as a pro/con position"
+                Write-Verbose "Side was set as '$side', which isn't understood as a pro/con position"
             }
-            $speakerOrder = $ballot.speakerorder
             try {
+                $speakerOrder = $ballot.speakerorder
                 $wins[$speakerOrder][([side]$side)] += $winBool
             } catch {
                 Write-Warning "Could not process data for $ballot"

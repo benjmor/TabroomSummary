@@ -3,7 +3,8 @@
     param (
         $tournamentID = 19483,
         $outPath = "$env:USERPROFILE\desktop\tournament_${tournamentID}_output.json",
-        $jsonPath
+        $jsonPath,
+        $patternMatch
     )
     if ($jsonPath) {
         $content = Get-Content C:\users\redbe\Desktop\debateJsonTest.txt
@@ -14,9 +15,12 @@
     $inputTest = Convert-TabroomJsonToObject -jsonText $content
     $entryIndex = @{}
     $objToReturn = @()
-    foreach ($category in $inputTest.categories){   
+    foreach ($category in $inputTest.categories){
+        if ($category.abbr -notmatch "PF"){
+            continue
+        }    
         #Sometimes the JSON has events, sometimes it doesn't. Figure out handling.
-        $tempEvents = if ($category.result_sets){ $category } elseif ($category.events) { $category.events }
+        $tempEvents = if ($category.PsObject.Properties.Name -contains 'result_sets'){ $category } elseif ($category.PsObject.Properties.Name -contains 'events') { $category.events }
         #Parse the rounds to get just the useful data
         foreach ($event in $tempEvents){
             $eventHash = @{
@@ -46,31 +50,39 @@
                             entry_code = $ballot.entry_code
                             entry_name = $ballot.entry_name
                         }
-                        if (-Not $section.bye){
+                        if ($section.PsObject.properties.name -notcontains 'bye'){
                             Add-Member -InputObject $ballotHash -MemberType NoteProperty -Name judge -Value "$($ballot.judge_first) $($ballot.judge_last)"
                         }
                         #Debate only
                         if ($event.type -match "debate"){
-                            if ($section.bye) {
+                            if ($section.PsObject.properties.name -contains 'bye') {
                                 $winloss = "B"
-                            } else {
+                            } elseif ($ballot.PSObject.Properties.name -contains 'scores' -and ($ballot.scores | where-object { $_.tag -like "winloss" })) {
                                 $winloss = if (($ballot.scores | where-object { $_.tag -like "winloss" }).value) { "W" } else { "L" }
                                 $side = if ($ballot.side -eq 1) { "AFF" } elseif ($ballot.side -eq 2) { "NEG" }
                                 Add-Member -InputObject $ballotHash -MemberType NoteProperty -Name Side -Value $side
-                                if ($ballot.speakerorder){
+                                if ($ballot.PsObject.Properties.name -contains 'speakerorder'){
                                     Add-Member -InputObject $ballotHash -MemberType NoteProperty -Name SpeakerOrder -Value $ballot.speakerorder
                                 }
                             }
                             Add-Member -InputObject $ballotHash -MemberType NoteProperty -Name Winloss -Value $winloss
                         }
                         #Speech and debate, sometimes
-                        $points = ($ballot.scores | where-object { $_.tag -like "point" }).value
-                        for ($i = 0 ; $i -lt $points.count ; $i++) {
-                            Add-Member -InputObject $ballotHash -MemberType NoteProperty -Name "Points for Speaker $($i+1)" -Value $points[$i]
-                        }
-                        $ranks = ($ballot.scores | where-object { $_.tag -like "rank" }).value
-                        for ($j = 0 ; $j -lt $ranks.count ; $j++) {
-                            Add-Member -InputObject $ballotHash -MemberType NoteProperty -Name "Ranks for Speaker $($j+1)" -Value $ranks[$j]
+                        if ($ballot.PsObject.Properties.name -contains 'scores'){
+                            $rawPointData = ($ballot.scores | where-object { $_.tag -like "point" })
+                            if ($rawPointData){
+                                $points = ($rawPointData).value
+                                for ($i = 0 ; $i -lt $points.count ; $i++) {
+                                    Add-Member -InputObject $ballotHash -MemberType NoteProperty -Name "Points for Speaker $($i+1)" -Value $points[$i]
+                                }
+                            }
+                            $rawRankData = ($ballot.scores | where-object { $_.tag -like "rank" })
+                            if ($rawRankData){
+                                $ranks = ($rawRankData).value
+                                for ($j = 0 ; $j -lt $ranks.count ; $j++) {
+                                    Add-Member -InputObject $ballotHash -MemberType NoteProperty -Name "Ranks for Speaker $($j+1)" -Value $ranks[$j]
+                                }
+                            }
                         }
                         $ballotHashArray += $ballotHash
                     }
