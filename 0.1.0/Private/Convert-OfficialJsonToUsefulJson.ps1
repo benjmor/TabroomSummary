@@ -3,11 +3,11 @@
     param (
         $tournamentID = 19483,
         $outPath = "$env:USERPROFILE\desktop\tournament_${tournamentID}_output.json",
-        $jsonPath,
+        $jsonPath = "$env:USERPROFILE\desktop\debateJsonTest.txt",
         $patternMatch
     )
     if ($jsonPath) {
-        $content = Get-Content C:\users\redbe\Desktop\debateJsonTest.txt
+        $content = Get-Content $jsonPath 
     } else {
         $baseURL = "http://www.tabroom.com/api/download_data.mhtml?tourn_id="
         $content = (Invoke-WebRequest $baseURL$tournamentID).Content
